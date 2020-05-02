@@ -12,7 +12,7 @@ class WeatherNetworkManager : NetworkManagerProtocol {
   //3 protocol methods will appear here
     func fetchCurrentWeather(city: String, completion: @escaping (WeatherModel) -> ()) {
         let formattedCity = city.replacingOccurrences(of: " ", with: "+")
-        let API_URL = "http://api.openweathermap.org/data/2.5/weather?q=\(formattedCity)&appid=\(NetworkProperties.API_KEY)"
+        let API_URL = "https://api.openweathermap.org/data/2.5/weather?q=\(formattedCity)&appid=\(NetworkProperties.API_KEY)"
 
         guard let url = URL(string: API_URL) else {
             fatalError()

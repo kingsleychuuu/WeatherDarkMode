@@ -14,7 +14,7 @@ class ViewController: UIViewController {
     
     let dateLabel: UILabel = {
         let label = UILabel()
-        label.text = "Friday, May 02, 2020"
+        label.text = "Date"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -25,7 +25,7 @@ class ViewController: UIViewController {
 
     let locationLabel: UILabel = {
         let label = UILabel()
-        label.text = "Seattle, US"
+        label.text = "Location"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -36,7 +36,7 @@ class ViewController: UIViewController {
     
     let tempLabel: UILabel = {
         let label = UILabel()
-        label.text = "10.7C"
+        label.text = "Temp"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -47,14 +47,13 @@ class ViewController: UIViewController {
     
     let conditionImageView: UIImageView = {
         let imageview = UIImageView()
-        imageview.backgroundColor = .green
         imageview.translatesAutoresizingMaskIntoConstraints = false
         return imageview
     }()
     
     let conditionLabel: UILabel = {
         let label = UILabel()
-        label.text = "Moderate Rain"
+        label.text = "Condition"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -65,7 +64,7 @@ class ViewController: UIViewController {
     
     let highLabel: UILabel = {
         let label = UILabel()
-        label.text = "High: 12.3C"
+        label.text = "High of?"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -76,7 +75,7 @@ class ViewController: UIViewController {
     
     let lowLabel: UILabel = {
         let label = UILabel()
-        label.text = "Low: 9.1C"
+        label.text = "Low of?"
         label.numberOfLines = 0
         label.textAlignment = .left
         label.textColor = .white
@@ -101,6 +100,7 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
+        setupTap()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -117,6 +117,12 @@ class ViewController: UIViewController {
         setupConditionaLabel()
         setupHighLowLabel()
         setupAddButton()
+    }
+    
+    fileprivate func setupTap() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(changeBackground))
+        tap.numberOfTapsRequired = 1
+        view.addGestureRecognizer(tap)
     }
     
     fileprivate func setupBackgroundView() {
@@ -187,8 +193,8 @@ class ViewController: UIViewController {
         NSLayoutConstraint.activate([
             addButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.1),
             addButton.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.1),
-            addButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
-            addButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -20)
+            addButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
+            addButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -30)
         ])
     }
     
@@ -198,25 +204,56 @@ class ViewController: UIViewController {
         addButton.layer.borderWidth = 1.0
     }
     
-    func loadData() {
-        if let city = locationLabel.text {
-            networkManager.fetchCurrentWeather(city: city) { (weather) in
-                DispatchQueue.main.async {
-                    self.tempLabel.text = String(weather.main.temp) + "°C"
-                    self.locationLabel.text = "\(weather.name) , \(weather.sys.country)"
-                    self.conditionLabel.text = weather.weather[0].weatherDescription
-                    self.lowLabel.text = "Min: " + String(weather.main.tempMin) + "°C"
-                    self.highLabel.text = "Max: " + String(weather.main.tempMax) + "°C"
-                    self.conditionImageView.loadImageFromURL(url: "http://openweathermap.org/img/wn/\(weather.weather[0].icon)@2x.png")
+    func loadData(city: String) {
+        networkManager.fetchCurrentWeather(city: city) { (weather) in
+            DispatchQueue.main.async {
+                let formatter = DateFormatter()
+                formatter.dateFormat = "dd MMM yyyy" //yyyy
+                let stringDate = formatter.string(from: Date(timeIntervalSince1970: TimeInterval(weather.dt)))
+                self.dateLabel.text = stringDate
+                
+                self.tempLabel.text = "\(Int(weather.main.temp - 273.15)) °C"
+                self.locationLabel.text = "\(weather.name) , \(weather.sys.country)"
+                self.conditionLabel.text = weather.weather[0].weatherDescription
+                self.lowLabel.text = "Min: \(Int(weather.main.tempMin - 273.15)) °C"
+                self.highLabel.text = "Max: \(Int(weather.main.tempMax - 273.15)) °C"
+                self.conditionImageView.loadImageFromURL(url: "https://openweathermap.org/img/wn/\(weather.weather[0].icon)@2x.png")
 
-                    UserDefaults.standard.set("\(weather.name)", forKey: "SelectedCity")
-                }
+                UserDefaults.standard.set("\(weather.name)", forKey: "SelectedCity")
             }
         }
     }
     
     @objc func addButtonTapped() {
-        
+        let alertController = UIAlertController(title: "Add City", message: "", preferredStyle: .alert)
+         alertController.addTextField { (textField : UITextField!) -> Void in
+             textField.placeholder = "City Name"
+         }
+         let saveAction = UIAlertAction(title: "Add", style: .default, handler: { alert -> Void in
+             let firstTextField = alertController.textFields![0] as UITextField
+            print("City Name: \(String(describing: firstTextField.text))")
+            guard let cityname = firstTextField.text else { return }
+            self.loadData(city: cityname) // Calling the loadData function
+         })
+         let cancelAction = UIAlertAction(title: "Cancel", style: .destructive, handler: { (action : UIAlertAction!) -> Void in
+            print("Cancel")
+         })
+
+
+         alertController.addAction(saveAction)
+         alertController.addAction(cancelAction)
+
+         self.present(alertController, animated: true, completion: nil)
+    }
+    
+    @objc func changeBackground() {
+        let randomRed = CGFloat.random(in: 0.1...0.7)
+        let randomGreen = CGFloat.random(in: 0.1...0.7)
+        let randomBlue = CGFloat.random(in: 0.1...0.7)
+        let backgroundColor = UIColor.init(red: randomRed, green: randomGreen, blue: randomBlue, alpha: 1)
+        UIView.animate(withDuration: 0.3) {
+            self.view.backgroundColor = backgroundColor
+        }
     }
 }
 
@@ -248,3 +285,8 @@ extension UIImageView {
         }
 
     }
+}
+
+    var preferredStatusBarStyle: UIStatusBarStyle {
+      return .lightContent
+}
