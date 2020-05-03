@@ -9,7 +9,6 @@
 import UIKit
 
 class ViewController: UIViewController {
-    
     let networkManager = WeatherNetworkManager()
     
     let dateLabel: UILabel = {
@@ -84,19 +83,6 @@ class ViewController: UIViewController {
         return label
     }()
     
-    lazy var addButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("+", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.titleLabel?.font = UIFont.systemFont(ofSize: 25)
-        button.contentVerticalAlignment = .center
-        button.contentHorizontalAlignment = .center
-        button.titleLabel?.baselineAdjustment = .alignCenters
-        button.addTarget(self, action: #selector(addButtonTapped), for: .touchUpInside)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        return button
-    }()
-
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
@@ -105,7 +91,6 @@ class ViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        roundButtonCorners()
     }
     
     fileprivate func setupViews() {
@@ -116,7 +101,6 @@ class ViewController: UIViewController {
         setupConditionImageView()
         setupConditionaLabel()
         setupHighLowLabel()
-        setupAddButton()
     }
     
     fileprivate func setupTap() {
@@ -127,6 +111,16 @@ class ViewController: UIViewController {
     
     fileprivate func setupBackgroundView() {
         view.backgroundColor = .black
+        
+        navigationController?.setNeedsStatusBarAppearanceUpdate()
+
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: UIBarMetrics.default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        navigationController?.navigationBar.isTranslucent = true
+        
+        let rightBarButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonTapped))
+        rightBarButton.tintColor = .white
+        navigationItem.rightBarButtonItem = rightBarButton
     }
 
     fileprivate func setupDateLabel() {
@@ -186,22 +180,6 @@ class ViewController: UIViewController {
             lowLabel.leftAnchor.constraint(equalTo: conditionImageView.leftAnchor),
             lowLabel.topAnchor.constraint(equalTo: highLabel.bottomAnchor)
         ])
-    }
-    
-    fileprivate func setupAddButton() {
-        view.addSubview(addButton)
-        NSLayoutConstraint.activate([
-            addButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.1),
-            addButton.heightAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.1),
-            addButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 30),
-            addButton.rightAnchor.constraint(equalTo: view.rightAnchor, constant: -30)
-        ])
-    }
-    
-    fileprivate func roundButtonCorners() {
-        addButton.layer.cornerRadius = addButton.frame.width/2
-        addButton.layer.borderColor = UIColor.white.cgColor
-        addButton.layer.borderWidth = 1.0
     }
     
     func loadData(city: String) {
@@ -287,6 +265,8 @@ extension UIImageView {
     }
 }
 
-    var preferredStatusBarStyle: UIStatusBarStyle {
-      return .lightContent
+extension UINavigationController {
+    open override var preferredStatusBarStyle: UIStatusBarStyle {
+       return .lightContent
+   }
 }
